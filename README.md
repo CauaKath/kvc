@@ -28,4 +28,4 @@ cargo install --path .
 For now, we only have the following commands:
 
 * help -> That will print a Help message for now. But it will show how to use all the other commands.
-* init -> That will iniate a kvc repository in the current directory.
+* init -> That will initiate a kvc repository in the current directory.
