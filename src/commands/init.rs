@@ -1,4 +1,4 @@
-use core::fmt;
+use crate::config::{Config, User};
 use core::panic;
 use std::env;
 use std::fs;
@@ -6,26 +6,6 @@ use std::io::Write;
 use std::path;
 
 const ROOT_FOLDER_NAME: &str = ".kvc";
-
-struct User {
-    email: String,
-    name: String,
-}
-
-pub struct Config {
-    user: User,
-    base_branch: String,
-}
-
-impl fmt::Display for Config {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "base_branch={}\nuser.email={}\nuser.name={}",
-            self.base_branch, self.user.email, self.user.name,
-        )
-    }
-}
 
 pub struct InitCommand;
 

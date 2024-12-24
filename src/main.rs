@@ -2,6 +2,7 @@ use clap::Parser;
 use commands::Cli;
 
 mod commands;
+mod config;
 
 fn main() {
     let args = match Cli::try_parse() {
@@ -12,5 +13,5 @@ fn main() {
         }
     };
 
-    Cli::execute(args.command);
+    Cli::execute(args.command, args.args);
 }
