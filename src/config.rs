@@ -1,5 +1,6 @@
 use std::{
-    fmt, fs,
+    fmt,
+    fs::{self, OpenOptions},
     io::{self, Write},
     path,
 };
@@ -24,6 +25,8 @@ impl fmt::Display for Config {
     }
 }
 
+const CONFIG_FILE_PATH: &str = ".kvc/config";
+
 impl Config {
     pub fn clone(&self) -> Config {
         Config {
@@ -35,8 +38,18 @@ impl Config {
         }
     }
 
+    pub fn new() -> Config {
+        Config {
+            base_branch: String::from(""),
+            user: User {
+                name: String::from(""),
+                email: String::from(""),
+            },
+        }
+    }
+
     pub fn read_from_file() -> Result<Config, io::Error> {
-        let config_file_path = path::PathBuf::from(".kvc/config");
+        let config_file_path = path::PathBuf::from(CONFIG_FILE_PATH);
 
         let config_content = fs::read_to_string(&config_file_path).unwrap_or_default();
 
@@ -45,13 +58,7 @@ impl Config {
             std::process::exit(1);
         }
 
-        let mut config = Config {
-            base_branch: String::from(""),
-            user: User {
-                name: String::from(""),
-                email: String::from(""),
-            },
-        };
+        let mut config = Self::new();
 
         for line in config_content.split("\n") {
             let (key, value) = Self::get_key_value(line);
@@ -77,9 +84,9 @@ impl Config {
     }
 
     pub fn write_to_file(config: Config) -> Result<(), io::Error> {
-        let config_file_path = path::PathBuf::from(".kvc/config");
+        let config_file_path = path::PathBuf::from(CONFIG_FILE_PATH);
 
-        let mut file = match fs::File::open(&config_file_path) {
+        let mut file = match OpenOptions::new().write(true).open(&config_file_path) {
             Ok(file) => file,
             Err(_) => {
                 println!("Error opening config file!");
