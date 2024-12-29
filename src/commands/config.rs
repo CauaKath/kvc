@@ -5,7 +5,7 @@ pub struct ConfigCommand {
     pub config_value: String,
 }
 
-const POSSIBLE_CONFIG_NAMES: [&str; 3] = ["base_branch", "user.name", "user.email"];
+const POSSIBLE_CONFIG_NAMES: [&str; 4] = ["list", "base_branch", "user.name", "user.email"];
 
 impl ConfigCommand {
     pub fn run(&self) {
@@ -21,6 +21,11 @@ impl ConfigCommand {
                 std::process::exit(1);
             }
         };
+
+        if self.config_name == *"list" {
+            println!("{}", config);
+            return;
+        }
 
         self.print_or_update(config);
     }
@@ -53,5 +58,10 @@ impl ConfigCommand {
                 std::process::exit(1);
             }
         }
+
+        println!(
+            "Config {} was updated successfully with {}",
+            self.config_name, self.config_value
+        );
     }
 }
