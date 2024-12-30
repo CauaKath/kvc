@@ -39,7 +39,18 @@ impl Cli {
                 let command_name = match args.first() {
                     Some(v) => v,
                     None => {
-                        println!("You can use the help command to explain what other commands can do. Ex: `kvc help init` will show you how this command work and if support any arguments.\n\nThe current available commands are:\n\n* init\n* config");
+                        let none_command_msg =
+                            "You can use the help command to explain what other commands can do.".to_owned() +
+                            " Ex: `kvc help init` " +
+                            "will show you how this command works and if it support any arguments." +
+                            "\n\n" +
+                            "The current available commands are:" +
+                            "\n\n" +
+                            "- init" +
+                            "\n" +
+                            "- config";
+
+                        println!("{}", none_command_msg);
                         std::process::exit(1);
                     }
                 };
