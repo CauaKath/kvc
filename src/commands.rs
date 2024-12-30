@@ -1,9 +1,11 @@
 use clap::Parser;
 use config::ConfigCommand;
 use core::fmt;
+use help::HelpCommand;
 use init::InitCommand;
 
 mod config;
+mod help;
 mod init;
 
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -33,7 +35,21 @@ pub struct Cli {
 impl Cli {
     pub fn execute(command: Command, args: Vec<String>) {
         match command {
-            Command::Help => println!("Help"),
+            Command::Help => {
+                let command_name = match args.first() {
+                    Some(v) => v,
+                    None => {
+                        println!("You can use the help command to explain what other commands can do. Ex: `kvc help init` will show you how this command work and if support any arguments.\n\nThe current available commands are:\n\n* init\n* config");
+                        std::process::exit(1);
+                    }
+                };
+
+                let help_command = HelpCommand {
+                    command_name: command_name.to_owned(),
+                };
+
+                help_command.run();
+            }
             Command::Init => InitCommand::run(),
             Command::Config => {
                 let config_name = match args.first() {
