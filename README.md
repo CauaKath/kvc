@@ -17,7 +17,7 @@ cd kvc
 
 ### Install
 
-Now that you're inside the repository you can run the following to create a binary a use the project globally:
+Now that you're inside the repository you can run the following to create a binary and use the project globally:
 
 ```bash
 cargo install --path .
@@ -27,5 +27,7 @@ cargo install --path .
 
 For now, we only have the following commands:
 
-* help -> That will print a Help message for now. But it will show how to use all the other commands.
+* help -> That will show how to use all the other commands.
 * init -> That will initiate a kvc repository in the current directory.
+* config -> That will enable you to access or change any of the default configurations.
+* add -> (WIP) For now just validates the passed path.
