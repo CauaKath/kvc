@@ -39,6 +39,10 @@ impl InitCommand {
             Err(e) => panic!("Error on create root dir: {}", e),
         };
 
+        if hf::is_hidden(&root_dir_path).unwrap_or_default() {
+            std::process::exit(1);
+        }
+
         hf::hide(&root_dir_path).unwrap();
     }
 

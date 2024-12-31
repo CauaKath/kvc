@@ -1,9 +1,11 @@
+use add::AddCommand;
 use clap::Parser;
 use config::ConfigCommand;
 use core::fmt;
 use help::HelpCommand;
 use init::InitCommand;
 
+mod add;
 mod config;
 mod help;
 mod init;
@@ -13,6 +15,7 @@ pub enum Command {
     Init,
     Help,
     Config,
+    Add,
 }
 
 impl fmt::Display for Command {
@@ -21,6 +24,7 @@ impl fmt::Display for Command {
             Command::Help => write!(f, "Help"),
             Command::Init => write!(f, "Init"),
             Command::Config => write!(f, "Config"),
+            Command::Add => write!(f, "Add"),
         }
     }
 }
@@ -82,6 +86,21 @@ impl Cli {
                 };
 
                 config_command.run();
+            }
+            Command::Add => {
+                let path = match args.first() {
+                    Some(v) => v,
+                    None => {
+                        println!("You must pass a path to add to the index");
+                        std::process::exit(1);
+                    }
+                };
+
+                let add_command = AddCommand {
+                    path: path.to_owned(),
+                };
+
+                add_command.run();
             }
         }
     }
