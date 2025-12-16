@@ -5,10 +5,16 @@ use core::fmt;
 use help::HelpCommand;
 use init::InitCommand;
 
+use crate::utils::check_is_kvc_repo;
+
 mod add;
 mod config;
 mod help;
 mod init;
+
+pub trait ExecutableCommand {
+    fn run(&self);
+}
 
 #[derive(clap::ValueEnum, Clone, Debug)]
 pub enum Command {
@@ -39,6 +45,20 @@ pub struct Cli {
 impl Cli {
     pub fn execute(command: Command, args: Vec<String>) {
         match command {
+            Command::Init | Command::Help => (),
+            _ => {
+                let is_kvc_repo = check_is_kvc_repo();
+                if !is_kvc_repo {
+                    let not_kvc_repo_msg = "This is not a KVC repository!".to_owned()
+                        + "\n\nUse `kvc init` to start a repository here.";
+
+                    println!("{}", not_kvc_repo_msg);
+                    std::process::exit(1);
+                }
+            }
+        }
+
+        match command {
             Command::Help => {
                 let command_name = match args.first() {
                     Some(v) => v,
@@ -65,7 +85,11 @@ impl Cli {
 
                 help_command.run();
             }
-            Command::Init => InitCommand::run(),
+            Command::Init => {
+                let init_command = InitCommand {};
+
+                init_command.run();
+            }
             Command::Config => {
                 let config_name = match args.first() {
                     Some(value) => value,

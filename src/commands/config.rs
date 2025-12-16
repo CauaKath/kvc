@@ -1,4 +1,4 @@
-use crate::config;
+use crate::{commands::ExecutableCommand, config};
 
 pub struct ConfigCommand {
     pub config_name: String,
@@ -7,8 +7,8 @@ pub struct ConfigCommand {
 
 const POSSIBLE_CONFIG_NAMES: [&str; 4] = ["list", "base_branch", "user.name", "user.email"];
 
-impl ConfigCommand {
-    pub fn run(&self) {
+impl ExecutableCommand for ConfigCommand {
+    fn run(&self) {
         if !POSSIBLE_CONFIG_NAMES.iter().any(|&v| v == self.config_name) {
             println!("This config does not exists!");
             std::process::exit(1);
@@ -29,7 +29,9 @@ impl ConfigCommand {
 
         self.print_or_update(config);
     }
+}
 
+impl ConfigCommand {
     fn print_or_update(&self, config: config::Config) {
         if self.config_value == *"" {
             match &self.config_name[..] {

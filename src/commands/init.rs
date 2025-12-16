@@ -1,3 +1,4 @@
+use crate::commands::ExecutableCommand;
 use crate::config::{Config, User};
 use core::panic;
 use std::env;
@@ -9,8 +10,8 @@ const ROOT_FOLDER_NAME: &str = ".kvc";
 
 pub struct InitCommand;
 
-impl InitCommand {
-    pub fn run() {
+impl ExecutableCommand for InitCommand {
+    fn run(&self) {
         let cur_dir = match env::current_dir() {
             Ok(dir) => dir,
             Err(e) => panic!("something went wrong: {}", e),
@@ -21,10 +22,14 @@ impl InitCommand {
         Self::create_objects_folder(&cur_dir);
         Self::create_head_file(&cur_dir);
         Self::create_config_file(&cur_dir);
+        Self::create_index_file(&cur_dir);
+        Self::hide_root_folder(&cur_dir);
 
         println!("A kvc repository was created!");
     }
+}
 
+impl InitCommand {
     fn create_root_folder(cur_dir: &path::PathBuf) {
         let mut root_dir_path = path::PathBuf::from(&cur_dir);
         root_dir_path.extend(&[ROOT_FOLDER_NAME]);
@@ -38,6 +43,11 @@ impl InitCommand {
             Ok(dir) => dir,
             Err(e) => panic!("Error on create root dir: {}", e),
         };
+    }
+
+    fn hide_root_folder(cur_dir: &path::PathBuf) {
+        let mut root_dir_path = path::PathBuf::from(&cur_dir);
+        root_dir_path.extend(&[ROOT_FOLDER_NAME]);
 
         if hf::is_hidden(&root_dir_path).unwrap_or_default() {
             std::process::exit(1);
@@ -115,6 +125,18 @@ impl InitCommand {
         match file.write_all(file_content.as_bytes()) {
             Ok(ok) => ok,
             Err(e) => panic!("Error writing to config file: {}", e),
-        }
+        };
+    }
+
+    fn create_index_file(cur_dir: &path::PathBuf) {
+        const INDEX_FILE_NAME: &str = "index";
+
+        let mut file_path = path::PathBuf::from(&cur_dir);
+        file_path.extend(&[ROOT_FOLDER_NAME, INDEX_FILE_NAME]);
+
+        match fs::File::create(file_path) {
+            Ok(file) => file,
+            Err(e) => panic!("Error creating the index file: {}", e),
+        };
     }
 }

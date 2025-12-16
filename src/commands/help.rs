@@ -1,11 +1,13 @@
+use crate::commands::ExecutableCommand;
+
 pub struct HelpCommand {
     pub command_name: String,
 }
 
 const POSSIBLE_COMMAND_NAMES: [&str; 2] = ["init", "config"];
 
-impl HelpCommand {
-    pub fn run(&self) {
+impl ExecutableCommand for HelpCommand {
+    fn run(&self) {
         if !POSSIBLE_COMMAND_NAMES
             .iter()
             .any(|&v| v == self.command_name)
@@ -27,8 +29,10 @@ impl HelpCommand {
             _ => (),
         }
     }
+}
 
-    fn help_init() {
+impl HelpCommand {
+    pub fn help_init() {
         let help_init_msg =
             "The init command will create the base structure of the kvc repository in the root of the folder you’re currently in.".to_owned() +
             " It can be used like this:" +
@@ -38,7 +42,7 @@ impl HelpCommand {
             "If the command is used in a folder that is a kvc repository already," +
             " it’ll display a message and simply do nothing.";
 
-        print!("{}", help_init_msg);
+        println!("{}", help_init_msg);
     }
 
     fn help_config() {

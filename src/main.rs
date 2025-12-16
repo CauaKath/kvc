@@ -3,6 +3,8 @@ use commands::Cli;
 
 mod commands;
 mod config;
+mod staging_area;
+mod utils;
 
 fn main() {
     let args = match Cli::try_parse() {
