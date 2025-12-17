@@ -1,3 +1,5 @@
+use std::path;
+
 use crate::commands::ExecutableCommand;
 
 pub struct HelpCommand {
@@ -7,6 +9,32 @@ pub struct HelpCommand {
 const POSSIBLE_COMMAND_NAMES: [&str; 2] = ["init", "config"];
 
 impl ExecutableCommand for HelpCommand {
+    fn new(args: Vec<String>, _root_folder: path::PathBuf) -> Self {
+        let command_name = match args.first() {
+            Some(v) => v,
+            None => {
+                let none_command_msg =
+                    "You can use the help command to explain what other commands can do."
+                        .to_owned()
+                        + " Ex: `kvc help init` "
+                        + "will show you how this command works and if it support any arguments."
+                        + "\n\n"
+                        + "The current available commands are:"
+                        + "\n\n"
+                        + "- init"
+                        + "\n"
+                        + "- config";
+
+                println!("{}", none_command_msg);
+                std::process::exit(1);
+            }
+        };
+
+        HelpCommand {
+            command_name: command_name.to_owned(),
+        }
+    }
+
     fn run(&self) {
         if !POSSIBLE_COMMAND_NAMES
             .iter()

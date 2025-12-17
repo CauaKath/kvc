@@ -3,6 +3,7 @@ use commands::Cli;
 
 mod commands;
 mod config;
+mod constants;
 mod staging_area;
 mod utils;
 

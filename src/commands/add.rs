@@ -1,5 +1,4 @@
 use std::{
-    env::{self},
     fs::{self},
     io::Write,
     path, process,
@@ -7,8 +6,11 @@ use std::{
 
 use crate::{
     commands::ExecutableCommand,
+    constants::OBJECTS_FOLDER_NAME,
     staging_area::StagingArea,
-    utils::{generate_hash, get_file_path_relative_to_root, read_file, segment_hash},
+    utils::{
+        generate_hash, get_current_dir, get_file_path_relative_to_root, read_file, segment_hash,
+    },
 };
 
 pub struct AddCommand {
@@ -16,9 +18,22 @@ pub struct AddCommand {
     pub path: String,
 }
 
-const OBJECTS_FOLDER_NAME: &str = ".kvc/objects";
-
 impl ExecutableCommand for AddCommand {
+    fn new(args: Vec<String>, root_folder: path::PathBuf) -> Self {
+        let path = match args.first() {
+            Some(v) => v,
+            None => {
+                println!("You must pass a path to add to the index");
+                std::process::exit(1);
+            }
+        };
+
+        AddCommand {
+            path: path.to_owned(),
+            root_path: root_folder,
+        }
+    }
+
     fn run(&self) {
         let valid_path = self.validate_path();
 
@@ -62,7 +77,7 @@ impl AddCommand {
     }
 
     fn process_file(&self, path: &str) {
-        let (file_content, _file_path) = read_file(path);
+        let file_content = read_file(path);
         let file_hash = match generate_hash(&file_content) {
             Ok(v) => v,
             Err(_e) => panic!("Could not generate file hash!"),
@@ -70,28 +85,33 @@ impl AddCommand {
 
         let (prefix, suffix) = segment_hash(&file_hash);
 
-        let mut prefix_dir_path = self.root_path.clone();
-        prefix_dir_path.extend(&[OBJECTS_FOLDER_NAME, prefix]);
-        self.create_prefix_dir(prefix_dir_path);
+        self.create_prefix_dir(prefix);
 
-        let mut suffix_file_path = self.root_path.clone();
-        suffix_file_path.extend(&[OBJECTS_FOLDER_NAME, prefix, suffix]);
-        let mut file = self.create_suffix_file(suffix_file_path);
+        let mut file = self.create_suffix_file(prefix, suffix);
 
         match file.write_all(file_content.as_bytes()) {
             Ok(ok) => ok,
             Err(e) => panic!("Error writing to config file: {}", e),
         };
 
+        self.add_file_to_index(path.to_owned(), file_hash);
+    }
+
+    fn add_file_to_index(&self, path: String, file_hash: String) {
         let mut staging_area = StagingArea::open(self.root_path.clone());
 
-        let file_path_from_root =
-            get_file_path_relative_to_root(self.root_path.clone(), path.to_owned());
+        let file_path_from_root = get_file_path_relative_to_root(self.root_path.clone(), path);
 
         staging_area.add(file_path_from_root, file_hash);
     }
 
-    fn create_prefix_dir(&self, path: path::PathBuf) {
+    fn create_prefix_dir(&self, prefix: &str) {
+        let path = self
+            .root_path
+            .clone()
+            .join(OBJECTS_FOLDER_NAME)
+            .join(prefix);
+
         if fs::exists(&path).expect("something went wrong!") {
             return;
         }
@@ -102,7 +122,14 @@ impl AddCommand {
         };
     }
 
-    fn create_suffix_file(&self, path: path::PathBuf) -> fs::File {
+    fn create_suffix_file(&self, prefix: &str, suffix: &str) -> fs::File {
+        let path = self
+            .root_path
+            .clone()
+            .join(OBJECTS_FOLDER_NAME)
+            .join(prefix)
+            .join(suffix);
+
         let file_exists = match fs::exists(&path) {
             Ok(v) => v,
             Err(_e) => panic!("Could not create suffix file!"),
@@ -128,11 +155,7 @@ impl AddCommand {
     fn validate_path(&self) -> bool {
         let is_path_valid = fs::exists(&self.path).unwrap_or_default();
 
-        let cur_dir = match env::current_dir() {
-            Ok(dir) => dir,
-            Err(e) => panic!("something went wrong: {}", e),
-        };
-
+        let cur_dir = get_current_dir();
         let cur_dir_abs_path = match path::absolute(&cur_dir) {
             Ok(v) => v,
             Err(_) => {

@@ -11,6 +11,10 @@ const ROOT_FOLDER_NAME: &str = ".kvc";
 pub struct InitCommand;
 
 impl ExecutableCommand for InitCommand {
+    fn new(_args: Vec<String>, _root_folder: path::PathBuf) -> Self {
+        InitCommand {}
+    }
+
     fn run(&self) {
         let cur_dir = match env::current_dir() {
             Ok(dir) => dir,

@@ -2,25 +2,22 @@ use std::{
     env, fs,
     io::{BufReader, Error, Read},
     os::unix::fs::MetadataExt,
-    path::{self, Path},
+    path,
     str::from_utf8,
 };
 
 use sha2::{Digest, Sha256};
 
-const ROOT_FOLDER_NAME: &str = ".kvc";
+use crate::constants::ROOT_FOLDER_NAME;
 
-pub fn read_file(path: &str) -> (String, String) {
+pub fn read_file(path: &str) -> String {
     let file_size = check_file_size(path);
 
-    let relative_path = Path::new(path);
-    let formatted_path = format!("{}", relative_path.display());
-
     if file_size > 400 {
-        return (read_large_file(path), formatted_path);
+        return read_large_file(path);
     }
 
-    (read_tiny_file(path), formatted_path)
+    read_tiny_file(path)
 }
 
 fn check_file_size(path: &str) -> u64 {
