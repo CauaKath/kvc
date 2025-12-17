@@ -29,20 +29,65 @@ fn check_file_size(path: &str) -> u64 {
     file_metadata.size()
 }
 
-pub fn check_is_kvc_repo() -> bool {
+pub fn get_current_dir() -> path::PathBuf {
     let cur_dir = match env::current_dir() {
         Ok(dir) => dir,
         Err(e) => panic!("something went wrong: {}", e),
     };
 
-    let mut root_dir_path = path::PathBuf::from(&cur_dir);
-    root_dir_path.extend(&[ROOT_FOLDER_NAME]);
+    let root_dir_path = path::PathBuf::from(&cur_dir);
 
-    if fs::exists(&root_dir_path).expect("something went wrong!") {
-        return true;
+    root_dir_path
+}
+
+pub fn get_kvc_root_folder(path: path::PathBuf) -> (bool, path::PathBuf) {
+    let mut cloned_path = path.clone();
+
+    cloned_path.extend(&[ROOT_FOLDER_NAME]);
+
+    loop {
+        if fs::exists(&cloned_path).expect("something went wrong!") {
+            break;
+        }
+
+        cloned_path = path.clone();
+        let popped = cloned_path.pop();
+        if !popped {
+            return (false, path::PathBuf::new());
+        }
+
+        let parent_path_exists = match fs::exists(&cloned_path) {
+            Ok(_v) => true,
+            Err(_e) => false,
+        };
+
+        if !parent_path_exists {
+            return (false, path::PathBuf::new());
+        }
+
+        return get_kvc_root_folder(cloned_path);
     }
 
-    false
+    (true, path)
+}
+
+pub fn get_file_path_relative_to_root(root_path: path::PathBuf, path: String) -> String {
+    let cur_dir = match env::current_dir() {
+        Ok(dir) => dir,
+        Err(e) => panic!("something went wrong: {}", e),
+    };
+
+    let cur_dir_path = cur_dir.to_path_buf();
+    let root_comp_path = match cur_dir_path.strip_prefix(root_path) {
+        Ok(v) => format!("{}", v.display()),
+        Err(e) => panic!("Could not strip file prefix! {}", e),
+    };
+
+    if root_comp_path == "" {
+        format!("{}", path)
+    } else {
+        format!("{}/{}", root_comp_path, path)
+    }
 }
 
 pub fn generate_hash(file_content: &str) -> Result<String, Error> {

@@ -5,7 +5,7 @@ use core::fmt;
 use help::HelpCommand;
 use init::InitCommand;
 
-use crate::utils::check_is_kvc_repo;
+use crate::utils::{get_current_dir, get_kvc_root_folder};
 
 mod add;
 mod config;
@@ -44,10 +44,12 @@ pub struct Cli {
 
 impl Cli {
     pub fn execute(command: Command, args: Vec<String>) {
+        let cur_dir_path = get_current_dir();
+        let (is_kvc_repo, root_folder) = get_kvc_root_folder(cur_dir_path);
+
         match command {
             Command::Init | Command::Help => (),
             _ => {
-                let is_kvc_repo = check_is_kvc_repo();
                 if !is_kvc_repo {
                     let not_kvc_repo_msg = "This is not a KVC repository!".to_owned()
                         + "\n\nUse `kvc init` to start a repository here.";
@@ -122,6 +124,7 @@ impl Cli {
 
                 let add_command = AddCommand {
                     path: path.to_owned(),
+                    root_path: root_folder,
                 };
 
                 add_command.run();

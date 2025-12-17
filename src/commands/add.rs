@@ -1,5 +1,5 @@
 use std::{
-    env,
+    env::{self},
     fs::{self},
     io::Write,
     path, process,
@@ -8,15 +8,15 @@ use std::{
 use crate::{
     commands::ExecutableCommand,
     staging_area::StagingArea,
-    utils::{generate_hash, read_file, segment_hash},
+    utils::{generate_hash, get_file_path_relative_to_root, read_file, segment_hash},
 };
 
 pub struct AddCommand {
+    pub root_path: path::PathBuf,
     pub path: String,
 }
 
-const ROOT_FOLDER_NAME: &str = ".kvc";
-const OBJECTS_FOLDER_NAME: &str = "objects";
+const OBJECTS_FOLDER_NAME: &str = ".kvc/objects";
 
 impl ExecutableCommand for AddCommand {
     fn run(&self) {
@@ -62,23 +62,20 @@ impl AddCommand {
     }
 
     fn process_file(&self, path: &str) {
-        let (file_content, file_path) = read_file(path);
+        let (file_content, _file_path) = read_file(path);
         let file_hash = match generate_hash(&file_content) {
             Ok(v) => v,
             Err(_e) => panic!("Could not generate file hash!"),
         };
 
         let (prefix, suffix) = segment_hash(&file_hash);
-        let cur_dir_path = self.get_cur_dir_path();
 
-        let mut prefix_dir_path = cur_dir_path.clone();
-        prefix_dir_path.extend(&[ROOT_FOLDER_NAME, OBJECTS_FOLDER_NAME, prefix]);
-
+        let mut prefix_dir_path = self.root_path.clone();
+        prefix_dir_path.extend(&[OBJECTS_FOLDER_NAME, prefix]);
         self.create_prefix_dir(prefix_dir_path);
 
-        let mut suffix_file_path = cur_dir_path.clone();
-        suffix_file_path.extend(&[ROOT_FOLDER_NAME, OBJECTS_FOLDER_NAME, prefix, suffix]);
-
+        let mut suffix_file_path = self.root_path.clone();
+        suffix_file_path.extend(&[OBJECTS_FOLDER_NAME, prefix, suffix]);
         let mut file = self.create_suffix_file(suffix_file_path);
 
         match file.write_all(file_content.as_bytes()) {
@@ -86,18 +83,12 @@ impl AddCommand {
             Err(e) => panic!("Error writing to config file: {}", e),
         };
 
-        let mut staging_area = StagingArea::open();
+        let mut staging_area = StagingArea::open(self.root_path.clone());
 
-        staging_area.add(file_path, file_hash);
-    }
+        let file_path_from_root =
+            get_file_path_relative_to_root(self.root_path.clone(), path.to_owned());
 
-    fn get_cur_dir_path(&self) -> path::PathBuf {
-        let cur_dir = match env::current_dir() {
-            Ok(dir) => dir,
-            Err(e) => panic!("something went wrong: {}", e),
-        };
-
-        path::PathBuf::from(&cur_dir)
+        staging_area.add(file_path_from_root, file_hash);
     }
 
     fn create_prefix_dir(&self, path: path::PathBuf) {
@@ -107,7 +98,7 @@ impl AddCommand {
 
         match fs::create_dir(&path) {
             Ok(dir) => dir,
-            Err(e) => panic!("Error on create root dir: {}", e),
+            Err(e) => panic!("Error on create prefix dir: {}", e),
         };
     }
 

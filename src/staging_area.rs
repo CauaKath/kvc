@@ -7,13 +7,16 @@ use std::{
 
 pub struct StagingArea {
     values: HashMap<String, String>,
+    root_path: path::PathBuf,
 }
 
 const INDEX_FILE_PATH: &str = ".kvc/index";
 
 impl StagingArea {
     fn open_file(&self, write: bool) -> fs::File {
-        let index_path = path::PathBuf::from(INDEX_FILE_PATH);
+        let mut index_path = self.root_path.clone();
+        index_path.extend(&[INDEX_FILE_PATH]);
+
         let file = match fs::OpenOptions::new()
             .write(write)
             .read(true)
@@ -26,9 +29,10 @@ impl StagingArea {
         file
     }
 
-    pub fn open() -> StagingArea {
+    pub fn open(root_path: path::PathBuf) -> StagingArea {
         let mut staging_area = Self {
             values: HashMap::new(),
+            root_path,
         };
 
         staging_area.read();
