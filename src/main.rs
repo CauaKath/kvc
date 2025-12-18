@@ -5,6 +5,7 @@ mod commands;
 mod config;
 mod constants;
 mod staging_area;
+mod traits;
 mod utils;
 
 fn main() {

@@ -5,12 +5,12 @@ use std::{
     path,
 };
 
+use crate::constants::INDEX_FILE_PATH;
+
 pub struct StagingArea {
     values: HashMap<String, String>,
     root_path: path::PathBuf,
 }
-
-const INDEX_FILE_PATH: &str = ".kvc/index";
 
 impl StagingArea {
     fn open_file(&self, write: bool) -> fs::File {
@@ -19,6 +19,7 @@ impl StagingArea {
 
         let file = match fs::OpenOptions::new()
             .write(write)
+            .truncate(write)
             .read(true)
             .open(&index_path)
         {
@@ -98,7 +99,7 @@ impl StagingArea {
         self.save();
     }
 
-    pub fn _remove(&mut self, path: String) {
+    pub fn remove(&mut self, path: String) {
         self.values.remove(&path);
 
         self.save();

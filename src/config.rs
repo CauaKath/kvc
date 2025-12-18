@@ -5,6 +5,8 @@ use std::{
     path,
 };
 
+use crate::constants::CONFIG_FILE_PATH;
+
 pub struct User {
     pub email: String,
     pub name: String,
@@ -24,8 +26,6 @@ impl fmt::Display for Config {
         )
     }
 }
-
-const CONFIG_FILE_PATH: &str = ".kvc/config";
 
 impl Config {
     pub fn clone(&self) -> Config {
@@ -50,7 +50,6 @@ impl Config {
 
     pub fn read_from_file() -> Result<Config, io::Error> {
         let config_file_path = path::PathBuf::from(CONFIG_FILE_PATH);
-
         let config_content = fs::read_to_string(&config_file_path).unwrap_or_default();
 
         if config_content == *"" {

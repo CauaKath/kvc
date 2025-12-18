@@ -1,12 +1,15 @@
 use std::path;
 
-use crate::commands::ExecutableCommand;
+use crate::{
+    commands::{Command, ExecutableCommand},
+    traits::FromString,
+};
 
 pub struct HelpCommand {
-    pub command_name: String,
+    pub command_name: Command,
 }
 
-const POSSIBLE_COMMAND_NAMES: [&str; 2] = ["init", "config"];
+const POSSIBLE_COMMAND_NAMES: [Command; 2] = [Command::Init, Command::Config];
 
 impl ExecutableCommand for HelpCommand {
     fn new(args: Vec<String>, _root_folder: path::PathBuf) -> Self {
@@ -31,14 +34,14 @@ impl ExecutableCommand for HelpCommand {
         };
 
         HelpCommand {
-            command_name: command_name.to_owned(),
+            command_name: Command::from_string(command_name.to_owned()),
         }
     }
 
     fn run(&self) {
         if !POSSIBLE_COMMAND_NAMES
             .iter()
-            .any(|&v| v == self.command_name)
+            .any(|v| *v == self.command_name)
         {
             let non_mapped_command_msg = "This is not a mapped command!".to_owned()
                 + " Try one of the following:"
@@ -51,9 +54,9 @@ impl ExecutableCommand for HelpCommand {
             std::process::exit(1);
         }
 
-        match &self.command_name[..] {
-            "init" => Self::help_init(),
-            "config" => Self::help_config(),
+        match self.command_name {
+            Command::Init => Self::help_init(),
+            Command::Config => Self::help_config(),
             _ => (),
         }
     }

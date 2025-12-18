@@ -9,7 +9,7 @@ use crate::{
     constants::OBJECTS_FOLDER_NAME,
     staging_area::StagingArea,
     utils::{
-        generate_hash, get_current_dir, get_file_path_relative_to_root, read_file, segment_hash,
+        generate_hash, get_file_path_relative_to_root, read_file, segment_hash, validate_path,
     },
 };
 
@@ -35,8 +35,7 @@ impl ExecutableCommand for AddCommand {
     }
 
     fn run(&self) {
-        let valid_path = self.validate_path();
-
+        let valid_path = validate_path(self.path.clone());
         if !valid_path {
             println!("The provided path is not valid to add files to the index!");
             process::exit(1);
@@ -150,32 +149,5 @@ impl AddCommand {
         };
 
         file
-    }
-
-    fn validate_path(&self) -> bool {
-        let is_path_valid = fs::exists(&self.path).unwrap_or_default();
-
-        let cur_dir = get_current_dir();
-        let cur_dir_abs_path = match path::absolute(&cur_dir) {
-            Ok(v) => v,
-            Err(_) => {
-                println!("Something went wrong converting to absolute cur_dir!");
-                process::exit(1);
-            }
-        };
-
-        let args_abs_path = match path::absolute(&self.path) {
-            Ok(v) => v,
-            Err(_) => {
-                println!("Something went wrong converting to absolute args path!");
-                process::exit(1);
-            }
-        };
-
-        if !is_path_valid || !args_abs_path.starts_with(cur_dir_abs_path.to_str().unwrap()) {
-            return false;
-        }
-
-        return true;
     }
 }

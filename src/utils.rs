@@ -2,18 +2,45 @@ use std::{
     env, fs,
     io::{BufReader, Error, Read},
     os::unix::fs::MetadataExt,
-    path,
+    path, process,
     str::from_utf8,
 };
 
 use sha2::{Digest, Sha256};
 
-use crate::constants::ROOT_FOLDER_NAME;
+use crate::constants::{MINIMUN_LARGE_FILE_SIZE, ROOT_FOLDER_NAME};
+
+pub fn validate_path(path: String) -> bool {
+    let is_path_valid = fs::exists(&path).unwrap_or_default();
+
+    let cur_dir = get_current_dir();
+    let cur_dir_abs_path = match path::absolute(&cur_dir) {
+        Ok(v) => v,
+        Err(_) => {
+            println!("Something went wrong converting to absolute cur_dir!");
+            process::exit(1);
+        }
+    };
+
+    let args_abs_path = match path::absolute(&path) {
+        Ok(v) => v,
+        Err(_) => {
+            println!("Something went wrong converting to absolute args path!");
+            process::exit(1);
+        }
+    };
+
+    if !is_path_valid || !args_abs_path.starts_with(cur_dir_abs_path.to_str().unwrap()) {
+        return false;
+    }
+
+    return true;
+}
 
 pub fn read_file(path: &str) -> String {
     let file_size = check_file_size(path);
 
-    if file_size > 400 {
+    if file_size > MINIMUN_LARGE_FILE_SIZE {
         return read_large_file(path);
     }
 
@@ -69,11 +96,7 @@ pub fn get_kvc_root_folder(path: path::PathBuf) -> (bool, path::PathBuf) {
 }
 
 pub fn get_file_path_relative_to_root(root_path: path::PathBuf, path: String) -> String {
-    let cur_dir = match env::current_dir() {
-        Ok(dir) => dir,
-        Err(e) => panic!("something went wrong: {}", e),
-    };
-
+    let cur_dir = get_current_dir();
     let cur_dir_path = cur_dir.to_path_buf();
     let root_comp_path = match cur_dir_path.strip_prefix(root_path) {
         Ok(v) => format!("{}", v.display()),

@@ -1,6 +1,6 @@
 use std::{fmt, path};
 
-use crate::{commands::ExecutableCommand, config};
+use crate::{commands::ExecutableCommand, config, traits::FromString};
 
 pub struct ConfigCommand {
     config_name: ConfigName,
@@ -14,10 +14,6 @@ enum ConfigName {
     UserName,
     UserEmail,
     Invalid,
-}
-
-trait FromString {
-    fn from_string(s: String) -> Self;
 }
 
 impl FromString for ConfigName {

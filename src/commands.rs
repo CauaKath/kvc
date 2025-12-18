@@ -1,24 +1,19 @@
-use add::AddCommand;
 use clap::Parser;
-use config::ConfigCommand;
-use core::fmt;
-use help::HelpCommand;
-use init::InitCommand;
 use std::path;
 
-use crate::utils::{get_current_dir, get_kvc_root_folder};
+use crate::{
+    commands::{
+        add::AddCommand, config::ConfigCommand, help::HelpCommand, init::InitCommand, rm::RmCommand,
+    },
+    traits::{ExecutableCommand, FromString},
+    utils::{get_current_dir, get_kvc_root_folder},
+};
 
 mod add;
 mod config;
 mod help;
 mod init;
-
-pub trait ExecutableCommand {
-    fn run(&self);
-    fn new(args: Vec<String>, root_folder: path::PathBuf) -> Self
-    where
-        Self: Sized;
-}
+mod rm;
 
 #[derive(clap::ValueEnum, Clone, Debug, PartialEq)]
 pub enum Command {
@@ -26,15 +21,18 @@ pub enum Command {
     Help,
     Config,
     Add,
+    Rm,
 }
 
-impl fmt::Display for Command {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            Command::Help => write!(f, "Help"),
-            Command::Init => write!(f, "Init"),
-            Command::Config => write!(f, "Config"),
-            Command::Add => write!(f, "Add"),
+impl FromString for Command {
+    fn from_string(s: String) -> Self {
+        match &s[..] {
+            "init" => Command::Init,
+            "help" => Command::Help,
+            "config" => Command::Config,
+            "add" => Command::Add,
+            "rm" => Command::Rm,
+            _ => Command::Help,
         }
     }
 }
@@ -57,6 +55,7 @@ impl Cli {
             Command::Config => Box::new(ConfigCommand::new(args, root_folder)),
             Command::Help => Box::new(HelpCommand::new(args, root_folder)),
             Command::Add => Box::new(AddCommand::new(args, root_folder)),
+            Command::Rm => Box::new(RmCommand::new(args, root_folder)),
         }
     }
 
