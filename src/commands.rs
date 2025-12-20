@@ -3,7 +3,8 @@ use std::path;
 
 use crate::{
     commands::{
-        add::AddCommand, config::ConfigCommand, help::HelpCommand, init::InitCommand, rm::RmCommand,
+        add::AddCommand, config::ConfigCommand, help::HelpCommand, init::InitCommand,
+        rm::RmCommand, status::StatusCommand,
     },
     traits::{ExecutableCommand, FromString},
     utils::{get_current_dir, get_kvc_root_folder},
@@ -14,6 +15,7 @@ mod config;
 mod help;
 mod init;
 mod rm;
+mod status;
 
 #[derive(clap::ValueEnum, Clone, Debug, PartialEq)]
 pub enum Command {
@@ -22,6 +24,7 @@ pub enum Command {
     Config,
     Add,
     Rm,
+    Status,
 }
 
 impl FromString for Command {
@@ -32,6 +35,7 @@ impl FromString for Command {
             "config" => Command::Config,
             "add" => Command::Add,
             "rm" => Command::Rm,
+            "status" => Command::Status,
             _ => Command::Help,
         }
     }
@@ -56,6 +60,7 @@ impl Cli {
             Command::Help => Box::new(HelpCommand::new(args, root_folder)),
             Command::Add => Box::new(AddCommand::new(args, root_folder)),
             Command::Rm => Box::new(RmCommand::new(args, root_folder)),
+            Command::Status => Box::new(StatusCommand::new(args, root_folder)),
         }
     }
 

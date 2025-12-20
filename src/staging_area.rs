@@ -93,6 +93,13 @@ impl StagingArea {
         }
     }
 
+    pub fn get(&self, path: String) -> String {
+        match self.values.get(&path) {
+            Some(v) => v.clone(),
+            None => String::new(),
+        }
+    }
+
     pub fn add(&mut self, path: String, hash: String) {
         self.values.insert(path, hash);
 
